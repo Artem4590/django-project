@@ -3,7 +3,22 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 
+# класс реализующий своего менеджера модулей
+# он возвращает все опубликованные посты
+class PublishedManager(models.Manager):
+    # Метод менеджера get_queryset() возвращает QuerySet, который будет вы-полняться.
+    # Мы переопределили его и добавили фильтр над результирующим QuerySet’ом
+    def get_queryset(self):
+        return super().get_queryset().filter(status='published')
+
+
 class Post(models.Model):
+    # Менеджер по умолчанию
+    objects = models.Manager()
+
+    # Наш новый менеджер
+    published = PublishedManager()
+
     STATUS_CHOICES = (
         ('draft', 'Draft'),
         ('published', 'Published'),
