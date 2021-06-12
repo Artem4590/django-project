@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 
 # класс реализующий своего менеджера модулей
@@ -61,3 +62,12 @@ class Post(models.Model):
     # Django использует его во многих случаях, например на сайте администрирования
     def __str__(self):
         return self.title
+
+    # метод возвращает канонический URL объекта
+    # для реализции поведения используем фyнкцию reverse(), которая дает возможность получать URL, указав имя шаблона и параметы
+    # мы будем использовать метод get_absolute_url() в HTML-шаблонах, чтобы получать ссылку на статью
+    def get_absolute_url(self):
+        return reverse(
+            'blog:post_detail',
+            args=[self.publish.year, self.publish.month, self.publish.day, self.slug]
+        )
