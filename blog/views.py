@@ -1,7 +1,24 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import ListView
 
+class PostListView(ListView):
+    # Использовать переопределенный QuerySet модели вместо получения всех объектов.
+    # Вместо задания атрибута QuerySet мы могли бы указать модель model=Post, и тогда Django,
+    # используя стандартный менеджер мо-дели, получал бы объекты как Post.objects.all()
+    queryset = Post.published.all()
+
+    # Использовать posts в качестве переменной контекста HTML-шаблона, в которой будет храниться список объектов.
+    # Если не указать атрибут con-text_object_name, по умолчанию используется переменная object_list
+    context_object_name = 'posts'
+
+    # Использовать постраничное отображение по три объекта на странице
+    paginate_by = 3
+
+    # Использовать указанный шаблон для формирования страницы.
+    # Если бы мы не указали template_name, то базовый класс ListView использовал бы шаблон blog/post_list.html
+    template_name = 'blog/post/list.html'
 
 # обработчик для списка постов
 def post_list(request):
