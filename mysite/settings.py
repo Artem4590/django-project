@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Класс BlogConfig – это конфигурация приложения.
+    # Теперь Django знает, что для этого проекта приложение блога активно, и сможет загрузить его модели.
+    'blog.apps.BlogConfig',
 ]
 
 MIDDLEWARE = [
