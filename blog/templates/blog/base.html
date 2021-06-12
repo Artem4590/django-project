@@ -1,0 +1,32 @@
+<!-- файл содержит каркас верстки сайта и разделяет содержимое на два блока: основной и боковую панель -->
+<!-- list.html и detail.html наследуются от base.html и отображают список статей и подробности статей соответственно -->
+
+<!-- импортирует шаблнный тег static;
+    с помощью тега static можно подключать файлы статики;-->
+    {% load static %}
+    <!DOCTYPE html>
+    <html lang="en">
+    
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{% endblock %}</title>
+        <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+    </head>
+    
+    <body>
+        <div id="content">
+            <!--
+        теги block говорят, что мы хотим определить блок в этом месте;
+        шаблоны унаследованные от base.html, смогут заполнять эти блоки собственным содержимым;
+        мы определили два блока: title, content;-->
+            {% block content %}{% endblock %}
+        </div>
+        <div id="sidebar">
+            <h2>My blog</h2>
+            <p>This is my blog.</p>
+        </div>
+    </body>
+    
+    </html>
