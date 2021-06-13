@@ -1,7 +1,10 @@
+from django.core.checks import messages
 from django.shortcuts import render, get_object_or_404
-from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
+from django.core.mail import send_mail
+from .models import Post
+from .forms import EmailPostForm
 
 class PostListView(ListView):
     # Использовать переопределенный QuerySet модели вместо получения всех объектов.
@@ -10,7 +13,7 @@ class PostListView(ListView):
     queryset = Post.published.all()
 
     # Использовать posts в качестве переменной контекста HTML-шаблона, в которой будет храниться список объектов.
-    # Если не указать атрибут con-text_object_name, по умолчанию используется переменная object_list
+    # Если не указать атрибут context_object_name, по умолчанию используется переменная object_list
     context_object_name = 'posts'
 
     # Использовать постраничное отображение по три объекта на странице
@@ -62,3 +65,42 @@ def post_detail(request, year, month, day, post):
     post = get_object_or_404(Post, slug=post, status='published', publish__year=year, publish__month=month, publish__day=day)
 
     return render(request, 'blog/post/detail.html', {'post': post})
+
+# Определяем функцию post_share, которая принимает объект запроса request и параметр post_id
+def post_share(request, post_id):
+    # Вызываем функцию get_object_or_404() для получения опубликованной статьи с указанным идентификатором
+    post = get_object_or_404(Post, id=post_id, status='published')
+
+    sent = False
+
+    # Пользователь заполняет форму и отправляет POST-запросом.
+    # Мы создаем объект формы, используя полученные из request.POST данные
+    if request.method == 'POST':
+        # Форма была отправлена на сохранение
+        form = EmailPostForm(request.POST)
+
+        # После этого выполняется проверка введенных данных с помощью метода формы is_valid().
+        # Он валидирует все описанные поля формы и возвращает True, если ошибок не найдено.
+        # Если хотя бы одно поле содержит неверное значение, возвращается False. Список полей с ошибками можно посмотреть в form.errors
+        if form.is_valid():
+            # Если форма валидна, мы получаем введенные данные с помощью form.cleaned_data.
+            # Этот атрибут является словарем с полями формы и их значениями
+            cd = form.cleaned_data
+
+            # Подготовка шаблона для отправки почты 
+            # Каждый параметр может быть индивидуальным
+            post_url = request.build_absolute_uri(post.get_absolute_url())
+            subject = '{} ({}) recommends you reading "{}"'.format(cd['name'], cd['email'], post.title)
+            message = 'Read "{}" at {}\n\n{}\'s comments: {}'.format(post.title, post_url, cd['name'], cd['comments'])
+
+            sent = True
+
+            # Отправка электронной почты
+            send_mail(subject, message, 'lavryha4590@gmail.com', [cd['to']])
+
+            #Если форма не проходит валидацию, то в атрибут cleaned_data попадут только корректные поля
+    else:
+        # Когда обработчик выполняется первый раз с GET-запросом, мы создаем объект form, который будет отображен в шаблоне как пустая форма
+        form = EmailPostForm()
+
+    return render(request, 'blog/post/share.html', {'post': post, 'form': form, 'sent': sent})
