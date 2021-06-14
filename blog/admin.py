@@ -1,6 +1,6 @@
 # регистрация моделей для отображения в админке
 from django.contrib import admin
-from .models import Post
+from .models import Post, Comment
 
 
 # admin.site.register(Post)
@@ -30,3 +30,10 @@ class PostAdmin(admin.ModelAdmin):
 
     # По умолчанию статьи  отсортированы по полям status и publish. Эта настройка задается в атри-буте ordering
     ordering = ('status', 'publish')
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'post', 'created', 'active')
+    list_filter = ('active', 'created', 'updated')
+    search_fields = ('name', 'email', 'body')
