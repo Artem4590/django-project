@@ -1,0 +1,17 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Share post{% endblock %}
+
+{% block content %}
+    {% if sent %}
+        <h1>Сообщение успешно отправлено</h1>
+        <p>"{{post.title}}" было успешно отправлено на почту {{form.cleaned_data.to}}.</p>
+    {% else %}
+        <h1>Поделиться "{{post.title}}" по почте</h1>
+        <form action="." method="post">
+            {{form.as_p}}
+            {% csrf_token %}
+            <input type="submit" value="Отправить">
+        </form>
+    {% endif %}
+{% endblock %}
