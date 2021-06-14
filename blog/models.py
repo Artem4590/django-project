@@ -71,3 +71,23 @@ class Post(models.Model):
             'blog:post_detail',
             args=[self.publish.year, self.publish.month, self.publish.day, self.slug]
         )
+
+class Comment(models.Model):
+    # Атрибут related_name позволяет получить доступ к комментариям конкретной статьи.
+    # Теперь мы сможем обращаться к статье из комментария, используя запись comment.post,
+    # и к комментариям статьи при помощи post.comments.all()
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    name = models.CharField(max_length=80)
+    email = models.EmailField()
+    body = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    # Мы добавили булевое поле active, для того чтобы была возможность скрыть некоторые комментарии
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ('created',)
+
+    def __str__(self):
+        return 'Comment by {} on {}'.format(self.name, self.post)
