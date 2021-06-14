@@ -1,10 +1,11 @@
 from django.core.checks import messages
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils.timezone import activate
 from django.views.generic import ListView
 from django.core.mail import send_mail
-from .models import Post
-from .forms import EmailPostForm
+from .models import Post, Comment
+from .forms import EmailPostForm, CommentForm
 
 class PostListView(ListView):
     # Использовать переопределенный QuerySet модели вместо получения всех объектов.
@@ -64,7 +65,37 @@ def post_detail(request, year, month, day, post):
     # функция возвращает объект, который подходит по указанным параметрам, или вызывает исключение HTTP 404
     post = get_object_or_404(Post, slug=post, status='published', publish__year=year, publish__month=month, publish__day=day)
 
-    return render(request, 'blog/post/detail.html', {'post': post})
+    # Список активных комментариев для этой статьи
+    # Мы создали объект QuerySet, используя объект статьи post и менеджер связанных объектов comments,
+    #   определенный в модели Comment в аргументе related_name
+    comments = post.comments.filter(active=True)
+    new_comment = None
+    comment_form = None
+    if request.method == 'POST':
+        # Пользователь оставил комментарий
+        comment_form = CommentForm(data=request.POST)
+        if comment_form.is_valid():
+            # Создаем комментарий, но пока не сохраняем в базе данных
+            # Метод save() создает объект модели, с которой связана форма, и сохраняет его в базу данных.
+            # Если в качестве аргумента метода передать commit=False, то объект будет создан, но не будет сохранен в базу данных.
+            # Это может быть полезным, когда перед сохранением объекта вам нужно каким-либо образом его изменить
+            new_comment = comment_form.save(commit=False)
+
+            # Привязываем комментарий к текущей статье
+            # Благодаря этому мы связываем созданный комментарий с текущей статьей
+            new_comment.post = post
+
+            # Сохраняем комментарий в базе данных
+            new_comment.save()
+        else:
+            comment_form = CommentForm()
+
+    return render(request, 'blog/post/detail.html',{
+        'post': post,
+        'comments': comments,
+        'new_comment': new_comment,
+        'comment_form': comment_form,
+    })
 
 # Определяем функцию post_share, которая принимает объект запроса request и параметр post_id
 def post_share(request, post_id):
